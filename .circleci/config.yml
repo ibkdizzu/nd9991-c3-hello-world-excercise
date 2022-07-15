@@ -30,7 +30,7 @@ jobs:
   # Exercise: Smoke Testing
   smoke_test:
       docker:
-        - image: amazon/aws-cli  #docker must be able to run aws cli commands
+        - image: amazon/aws-cli  #docker used must be able to run aws-cli commands or generally commands in the specified shell
       steps:
         - run:
             name: Test job
