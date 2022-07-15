@@ -1,7 +1,8 @@
 version: 2.1
-orbs:
-  aws-cli: circleci/aws-cli@3.1.1
 
+
+orbs:
+  aws-cli: circleci/aws-cli@2.0.3
 commands:
   # Exercise - Rollback
   destroy_environment:
@@ -13,8 +14,6 @@ commands:
           when: on_fail
           command: |
             aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5}
-
-
 jobs:
   create_infrastructure: 
       docker:
@@ -28,28 +27,10 @@ jobs:
                 --template-file template.yml \
                 --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:5} \
                 --region us-east-1
-
-
-  configure_infrastructure:
-    docker:
-      - image: python:3.7-alpine3.11
-    steps:
-      - checkout
-      - add_ssh_keys:
-              # You can get this ID in the section where you registered the SSH Key
-              fingerprints: ["d8:32:e7:eb:88:77:21:6f:ca:e9:44:1f:c6:ee:ef:b6"] 
-      - run:
-          name: Install Ansible
-          command: |
-            apk add --update ansible
-      - run:
-          name: Run Playbook and Configure server
-          command: |
-            ansible-playbook -i inventory.txt main-remote.yml
-
+  # Exercise: Smoke Testing
   smoke_test:
       docker:
-        - image: amazon/aws-cli
+        - image: amazon/aws-cli  #docker used must be able to run aws-cli commands or generally commands in the specified shell
       steps:
         - run:
             name: Test job
@@ -57,13 +38,11 @@ jobs:
             command:  return 1
         - destroy_environment
 
+#add workload
 workflows:
-  full_automation:
+  roll_back_excercise:
     jobs:
       - create_infrastructure
-      - configure_infrastructure
-          requires:
-            - create_infrastructure
       - smoke_test:
           requires:
             - create_infrastructure
